@@ -1,0 +1,121 @@
+<h1>New Optimization</h1>
+
+<%= form_with url: '/optimizations', method: :post do %>
+
+  <!-- Asset Bulk Input Textbox -->
+  <h3>Enter Asset Data</h3>
+  <textarea id="asset_bulk_input" rows="10" cols="50" placeholder="Paste asset data here (Name, Return, Volatility, Min, Max)"></textarea>
+  
+  <table id="asset_table">
+    <tr>
+      <th>Name</th>
+      <th>Expected Return</th>
+      <th>Expected Volatility</th>
+      <th>Min Weight</th>
+      <th>Max Weight</th>
+    </tr>
+
+    <% 9.times do |index| %>
+      <tr>
+        <td>
+          <%= text_field_tag "assets[#{index}][name]", '', id: "asset_name_#{index}", placeholder: 'Asset Name' %>
+        </td>
+        <td>
+          <%= text_field_tag "assets[#{index}][expected_return]", '', id: "expected_return_#{index}", placeholder: 'Expected Return' %>
+        </td>
+        <td>
+          <%= text_field_tag "assets[#{index}][expected_volatility]", '', id: "expected_volatility_#{index}", placeholder: 'Expected Volatility' %>
+        </td>
+        <td>
+          <%= text_field_tag "assets[#{index}][min_weight]", '', id: "min_weight_#{index}", placeholder: 'Min Weight' %>
+        </td>
+        <td>
+          <%= text_field_tag "assets[#{index}][max_weight]", '', id: "max_weight_#{index}", placeholder: 'Max Weight' %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+
+  <!-- Correlation Bulk Input Textbox -->
+  <h3>Enter Correlation Data</h3>
+  <textarea id="correlation_bulk_input" rows="10" cols="50" placeholder="Paste correlation matrix data here"></textarea>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <% 9.times do |i| %>
+          <th id="col_header_<%= i %>">Asset <%= i + 1 %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% 9.times do |i| %>
+        <tr>
+          <th id="row_header_<%= i %>">Asset <%= i + 1 %></th>
+          <% 9.times do |j| %>
+            <td>
+              <% if i == j %>
+                <%= text_field_tag "correlations[#{i}][#{j}]", '1', readonly: true, id: "correlation_#{i}_#{j}" %>
+              <% elsif j < i %>
+                <%= text_field_tag "correlations[#{i}][#{j}]", '', placeholder: 'Correlation', id: "correlation_#{i}_#{j}" %>
+              <% else %>
+                <!-- Empty cells for upper triangular matrix -->
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Function to process pasted asset data
+  document.getElementById('asset_bulk_input').addEventListener('input', function() {
+    const inputData = this.value.trim().split('\n');
+    
+    inputData.forEach((row, index) => {
+      const columns = row.split(/\t|,/); // Split by tab or comma
+      if (columns.length >= 5 && index < 9) {
+        // Populate asset input fields
+        document.getElementById(`asset_name_${index}`).value = columns[0].trim();
+        document.getElementById(`expected_return_${index}`).value = columns[1].trim();
+        document.getElementById(`expected_volatility_${index}`).value = columns[2].trim();
+        document.getElementById(`min_weight_${index}`).value = columns[3].trim();
+        document.getElementById(`max_weight_${index}`).value = columns[4].trim();
+
+        // Dynamically update the correlation table headers
+        document.getElementById(`col_header_${index}`).textContent = columns[0].trim();
+        document.getElementById(`row_header_${index}`).textContent = columns[0].trim();
+      }
+    });
+  });
+
+  // Function to process pasted correlation matrix data
+  document.getElementById('correlation_bulk_input').addEventListener('input', function() {
+    const inputData = this.value.trim().split('\n');
+    
+    inputData.forEach((row, rowIndex) => {
+      const columns = row.split(/\t|,/); // Split by tab or comma
+      columns.forEach((value, colIndex) => {
+        if (rowIndex < 9 && colIndex < 9 && colIndex <= rowIndex) { // Only update lower triangle
+          const inputField = document.getElementById(`correlation_${rowIndex}_${colIndex}`);
+          if (inputField) {
+            inputField.value = value.trim();
+          }
+        }
+      });
+    });
+  });
+
+});
+
+
+</script>
+
+
+  <%= submit_tag "Calculate Efficient Frontier" %>
+<% end %>

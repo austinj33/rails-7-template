@@ -1,0 +1,20 @@
+<h1>Efficient Frontier</h1>
+
+<% if @frontier.present? %>
+  <table>
+    <tr>
+      <th>Return</th>
+      <th>Risk</th>
+      <th>Weights</th>
+    </tr>
+    <% @frontier.each do |point| %>
+      <tr>
+        <td><%= point[:return].round(2) %></td>
+        <td><%= point[:risk].round(2) %></td>
+        <td><%= point[:weights].map { |w| sprintf('%.2f', w) }.join(', ') %></td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p>No data to display.</p>
+<% end %>
